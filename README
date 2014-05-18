@@ -1,0 +1,30 @@
+===============================================================================
+OVERVIEW
+
+  modes_db_2_gpx is a simple hack to convert modes_rx (https://github.com/bistromath/gr-air-modes) sqlite database data into GPX XML based data which can be load
+  into programs such as viking (http://viking.sourceforge.net/) or marble (http://marble.kde.org/).
+
+===============================================================================
+REQUIREMENTS
+  modes_db_2_gpx requires:
+    * CMake 2.8 or later
+    * SQLite 3.7 or later
+    * Boost 1.40 or later
+
+========================================================================
+BUILDING
+
+  $ cd build
+  $ cmake ../
+  $ make
+
+========================================================================
+USAGE
+
+  The main application is modes_db_2_gpx. For a complete list of options,
+  run:
+
+  $ modes_db_2_gpx --help
+
+  By default modes_db_2_gpx will try to open 'air_modes.db' and will generate 'air_modes.gpx'
+  this behaviour can be overridden.
