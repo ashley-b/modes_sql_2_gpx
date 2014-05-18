@@ -63,14 +63,14 @@ public:
 		m_handler = xmlFindCharEncodingHandler(encoding);
 
 		if (!m_handler) {
-			std::cerr << "ConvertInput: no encoding handler found for " <<  (encoding ? encoding : "") << std::endl;
-//			throw 
+			std::cerr << "XML_Convert::XML_Convert: no encoding handler found for " <<  (encoding ? encoding : "") << std::endl;
+			throw std::runtime_error("XML_Convert::XML_Convert: no encoding handler found for");
 		}
 	}
 
 
 	/**
-	 * ConvertInput:
+	 * convertInput:
 	 * \param in: string in a given encoding
 	 * @encoding: the encoding used
 	 *
@@ -78,7 +78,7 @@ public:
 	 *
 	 * Returns the converted UTF-8 string, or NULL in case of error.
 	 */
-	boost::shared_ptr< XML_Char > ConvertInput(const char *in) {
+	boost::shared_ptr< XML_Char > convertInput(const char *in) {
 		xmlChar *out;
 		int ret;
 		int size;
@@ -86,14 +86,14 @@ public:
 		int temp;
 
 		if (in == 0) {
-			throw std::runtime_error("Input string is NULL");
+			throw std::runtime_error("XML_Convert::convertInput: Input string is NULL");
 		}
 
 		size = (int) strlen(in) + 1;
 		out_size = size * 2 - 1;
 		out = (unsigned char *) xmlMalloc((size_t) out_size);
 		if (out == NULL) {
-			throw std::runtime_error("ConvertInput: no mem");
+			throw std::runtime_error("XML_Convert::convertInput: no mem");
 		}
 
 
@@ -101,12 +101,12 @@ public:
 		ret = m_handler->input(out, &out_size, (const xmlChar *) in, &temp);
 		if ((ret < 0) || (temp - size + 1)) {
 			if (ret < 0) {
-				std::cerr << "ConvertInput: conversion wasn't successful." << std::endl;
+				std::cerr << "XML_Convert:convertInput: conversion wasn't successful." << std::endl;
 			} else {
-				std::cerr << "ConvertInput: conversion wasn't successful. converted: " << temp << " octets." << std::endl;
+				std::cerr << "XML_Convert::convertInput: conversion wasn't successful. converted: " << temp << " octets." << std::endl;
 			}
 			xmlFree(out);
-			throw std::runtime_error("ConvertInput: conversion wasn't successful");
+			throw std::runtime_error("XML_Convert::convertInput: conversion wasn't successful");
 			out = 0;
 		} else {
 			out = (unsigned char *) xmlRealloc(out, out_size + 1);
@@ -130,14 +130,14 @@ static int sql_callback_vector(void *userData, int argc, char **argv, char **azC
 
 	boost::shared_ptr< XML_Char > xml_char;
 
-	xml_char = xmlConvert->ConvertInput(argv[2]);
+	xml_char = xmlConvert->convertInput(argv[2]);
 	/* Add element */
 	rc = xmlTextWriterWriteElement(xml, BAD_CAST "speed", xml_char->get_xmlChar());
 	if (rc < 0) {
 		throw std::runtime_error("testXmlwriterFilename: Error at xmlTextWriterStartElement");
 	}
 
-	xml_char = xmlConvert->ConvertInput(argv[3]);
+	xml_char = xmlConvert->convertInput(argv[3]);
 	/* Add element */
 	rc = xmlTextWriterWriteElement(xml, BAD_CAST "course", xml_char->get_xmlChar());
 	if (rc < 0) {
@@ -196,14 +196,14 @@ static int sql_callback_position(void *userData, int argc, char **argv, char **a
 	rc = xmlTextWriterStartElement(xml, BAD_CAST "trkpt");
 
 
-	xml_char = xmlConvert->ConvertInput(argv[3]);
+	xml_char = xmlConvert->convertInput(argv[3]);
 	/* Add an attribute  */
 	rc = xmlTextWriterWriteAttribute(xml, BAD_CAST "lat", xml_char->get_xmlChar());
 	if (rc < 0) {
 		throw std::runtime_error("sql_callback_position lat: Error at xmlTextWriterWriteAttribute");
 	}
 
-	xml_char = xmlConvert->ConvertInput(argv[4]);
+	xml_char = xmlConvert->convertInput(argv[4]);
 	/* Add an attribute  */
 	rc = xmlTextWriterWriteAttribute(xml, BAD_CAST "lon", xml_char->get_xmlChar());
 	if (rc < 0) {
@@ -222,7 +222,7 @@ static int sql_callback_position(void *userData, int argc, char **argv, char **a
 	strftime(strDateTime, sizeof(strDateTime), "%FT%TZ", &tm );
 
 
-	xml_char = xmlConvert->ConvertInput( strDateTime );
+	xml_char = xmlConvert->convertInput( strDateTime );
 	/* Add element */
 	rc = xmlTextWriterWriteElement(xml, BAD_CAST "time", xml_char->get_xmlChar());
 	if (rc < 0) {
@@ -230,7 +230,7 @@ static int sql_callback_position(void *userData, int argc, char **argv, char **a
 	}
 
 
-	xml_char = xmlConvert->ConvertInput(argv[2]);
+	xml_char = xmlConvert->convertInput(argv[2]);
 	/* Add element */
 	rc = xmlTextWriterWriteElement(xml, BAD_CAST "ele", xml_char->get_xmlChar());
 	if (rc < 0) {
@@ -296,7 +296,7 @@ static int sql_callback_ident(void *userData, int argc, char **argv, char **azCo
 	}
 
 
-	xml_char = xmlConvert->ConvertInput(argv[1]);
+	xml_char = xmlConvert->convertInput(argv[1]);
 	/* Add element */
 	rc = xmlTextWriterWriteElement(xml, BAD_CAST "name", xml_char->get_xmlChar());
 	if (rc < 0) {
@@ -311,7 +311,7 @@ static int sql_callback_ident(void *userData, int argc, char **argv, char **azCo
 		s += ", Type: ";
 		s += argv[2];
 
-		xml_char = xmlConvert->ConvertInput(s.c_str());
+		xml_char = xmlConvert->convertInput(s.c_str());
 		/* Add element */
 		rc = xmlTextWriterWriteElement(xml, BAD_CAST "desc", xml_char->get_xmlChar());
 		if (rc < 0) {
