@@ -18,6 +18,5 @@ MESSAGE(STATUS "LIBXML_LIBRARY = ${LIBXML_LIBRARY}")
 INCLUDE_DIRECTORIES( ${SQLITE3_INCLUDE_DIR} ${LIBXML_INCLUDE_DIR} ${Boost_INCLUDE_DIR} )
 
 ADD_EXECUTABLE( modes_rx_db_2_gpx src/modes_rx_db_2_gpx.cc )
- #ADD_EXECUTABLE( modes_sql_2_gpx src/modes_sql_2_gpx.cc src/gpx.h )
 
 TARGET_LINK_LIBRARIES( modes_rx_db_2_gpx ${SQLITE3_LIBRARY} ${LIBXML_LIBRARY} ${Boost_LIBRARIES} )

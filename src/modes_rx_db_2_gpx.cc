@@ -70,43 +70,42 @@ public:
 
 
 	/**
-	 * convertInput:
-	 * \param in: string in a given encoding
-	 * @encoding: the encoding used
-	 *
 	 * Converts @in into UTF-8 for processing with libxml2 APIs
 	 *
-	 * Returns the converted UTF-8 string, or NULL in case of error.
+	 * \throws std::runtime_error If there was a problem during the convertion
+	 *
+	 * \param in: string in a given encoding
+	 *
+	 * \returns Boost shared pointer to the converted UTF-8 string
 	 */
-	boost::shared_ptr< XML_Char > convertInput(const char *in) {
+	boost::shared_ptr< XML_Char > convert(const char *in) {
 		xmlChar *out;
 		int ret;
 		int size;
 		int out_size;
 		int temp;
 
-		if (in == 0) {
-			throw std::runtime_error("XML_Convert::convertInput: Input string is NULL");
+		if (in == NULL) {
+			throw std::runtime_error("XML_Convert::convert: Input string is NULL");
 		}
 
 		size = (int) strlen(in) + 1;
 		out_size = size * 2 - 1;
 		out = (unsigned char *) xmlMalloc((size_t) out_size);
 		if (out == NULL) {
-			throw std::runtime_error("XML_Convert::convertInput: no mem");
+			throw std::runtime_error("XML_Convert::convert: no mem");
 		}
-
 
 		temp = size - 1;
 		ret = m_handler->input(out, &out_size, (const xmlChar *) in, &temp);
 		if ((ret < 0) || (temp - size + 1)) {
 			if (ret < 0) {
-				std::cerr << "XML_Convert:convertInput: conversion wasn't successful." << std::endl;
+				std::cerr << "XML_Convert::convert: conversion wasn't successful." << std::endl;
 			} else {
-				std::cerr << "XML_Convert::convertInput: conversion wasn't successful. converted: " << temp << " octets." << std::endl;
+				std::cerr << "XML_Convert::convert: conversion wasn't successful. converted: " << temp << " octets." << std::endl;
 			}
 			xmlFree(out);
-			throw std::runtime_error("XML_Convert::convertInput: conversion wasn't successful");
+			throw std::runtime_error("XML_Convert::convert: conversion wasn't successful");
 			out = 0;
 		} else {
 			out = (unsigned char *) xmlRealloc(out, out_size + 1);
@@ -130,14 +129,14 @@ static int sql_callback_vector(void *userData, int argc, char **argv, char **azC
 
 	boost::shared_ptr< XML_Char > xml_char;
 
-	xml_char = xmlConvert->convertInput(argv[2]);
+	xml_char = xmlConvert->convert(argv[2]);
 	/* Add element */
 	rc = xmlTextWriterWriteElement(xml, BAD_CAST "speed", xml_char->get_xmlChar());
 	if (rc < 0) {
 		throw std::runtime_error("testXmlwriterFilename: Error at xmlTextWriterStartElement");
 	}
 
-	xml_char = xmlConvert->convertInput(argv[3]);
+	xml_char = xmlConvert->convert(argv[3]);
 	/* Add element */
 	rc = xmlTextWriterWriteElement(xml, BAD_CAST "course", xml_char->get_xmlChar());
 	if (rc < 0) {
@@ -196,14 +195,14 @@ static int sql_callback_position(void *userData, int argc, char **argv, char **a
 	rc = xmlTextWriterStartElement(xml, BAD_CAST "trkpt");
 
 
-	xml_char = xmlConvert->convertInput(argv[3]);
+	xml_char = xmlConvert->convert(argv[3]);
 	/* Add an attribute  */
 	rc = xmlTextWriterWriteAttribute(xml, BAD_CAST "lat", xml_char->get_xmlChar());
 	if (rc < 0) {
 		throw std::runtime_error("sql_callback_position lat: Error at xmlTextWriterWriteAttribute");
 	}
 
-	xml_char = xmlConvert->convertInput(argv[4]);
+	xml_char = xmlConvert->convert(argv[4]);
 	/* Add an attribute  */
 	rc = xmlTextWriterWriteAttribute(xml, BAD_CAST "lon", xml_char->get_xmlChar());
 	if (rc < 0) {
@@ -222,7 +221,7 @@ static int sql_callback_position(void *userData, int argc, char **argv, char **a
 	strftime(strDateTime, sizeof(strDateTime), "%FT%TZ", &tm );
 
 
-	xml_char = xmlConvert->convertInput( strDateTime );
+	xml_char = xmlConvert->convert( strDateTime );
 	/* Add element */
 	rc = xmlTextWriterWriteElement(xml, BAD_CAST "time", xml_char->get_xmlChar());
 	if (rc < 0) {
@@ -230,7 +229,7 @@ static int sql_callback_position(void *userData, int argc, char **argv, char **a
 	}
 
 
-	xml_char = xmlConvert->convertInput(argv[2]);
+	xml_char = xmlConvert->convert(argv[2]);
 	/* Add element */
 	rc = xmlTextWriterWriteElement(xml, BAD_CAST "ele", xml_char->get_xmlChar());
 	if (rc < 0) {
@@ -296,7 +295,7 @@ static int sql_callback_ident(void *userData, int argc, char **argv, char **azCo
 	}
 
 
-	xml_char = xmlConvert->convertInput(argv[1]);
+	xml_char = xmlConvert->convert(argv[1]);
 	/* Add element */
 	rc = xmlTextWriterWriteElement(xml, BAD_CAST "name", xml_char->get_xmlChar());
 	if (rc < 0) {
@@ -311,7 +310,7 @@ static int sql_callback_ident(void *userData, int argc, char **argv, char **azCo
 		s += ", Type: ";
 		s += argv[2];
 
-		xml_char = xmlConvert->convertInput(s.c_str());
+		xml_char = xmlConvert->convert(s.c_str());
 		/* Add element */
 		rc = xmlTextWriterWriteElement(xml, BAD_CAST "desc", xml_char->get_xmlChar());
 		if (rc < 0) {
@@ -387,7 +386,7 @@ static void xml_gpx_setup(void) {
 	}
 
 	/* Add an attribute  */
-	rc = xmlTextWriterWriteAttribute(xml, BAD_CAST "creator", BAD_CAST "Viking -- http://viking.sf.net/");
+	rc = xmlTextWriterWriteAttribute(xml, BAD_CAST "creator", BAD_CAST "modes_rx_db_2_gpx -- https://github.com/ashley-b/modes_sql_2_gpx");
 	if (rc < 0) {
 		throw std::runtime_error("xml_gpx_setup: Error at xmlTextWriterWriteAttribute");
 	}
@@ -471,26 +470,24 @@ int main(int argc, char** argv) {
 	try {
 		po::variables_map vm;
 		po::store(po::parse_command_line(argc, argv, desc), vm);
-		po::notify(vm);    
+		po::notify(vm);
 
 		if (vm.count("help")) {
-			std::cout << desc << "\n";
-			exit(1); 
+			std::cout << desc << std::endl;
+			exit(1);
 		}
+	}
+	catch(po::error& e) {
+		std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
+		std::cerr << desc << std::endl;
+		return 1;
+	}
 
-
-		rc = sqlite3_open(inFileName.c_str(), &db);
-		if ( rc ) {
-			std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
-			exit(0);
-		} 
+	rc = sqlite3_open(inFileName.c_str(), &db);
+	if ( rc ) {
+		std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+		exit(1);
 	} 
-    catch(po::error& e) 
-    { 
-      std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
-      std::cerr << desc << std::endl; 
-      return 1;
-    } 
 
 	xmlConvert.reset( new XML_Convert( GPX_ENCODING ) );
 
